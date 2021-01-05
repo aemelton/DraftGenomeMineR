@@ -1,10 +1,10 @@
 ### AE Melton, 2020
 
 # Load all the libraries!
-source("~/Dropbox/R_Packages/DraftGenomeMineR/RequiredLibraries.R")
+source("~/Dropbox/R_Packages/DraftGenomeMineR/RequiredLibraries.R") # This script contains a list of packages that will be installed, if needed, and load the libraries
 #
 
-# Directory for where everything shall live
+# Directory for where everything shall live; all folders will be in this "master" directory
 project.folder <- "~/Dropbox/Genome_PlayGround/"
 setwd(project.folder)
 #
@@ -13,23 +13,23 @@ setwd(project.folder)
 # Chonk 1: Load data, do a blast search
 #################################################################################################################
 
-# Just making some variables up here for use later in a function when I make it....
-# fasta for draft genome
-# blast database
-# query
-# AA or DNA?
-# output fasta file name
-query.file.path <- "FASTAs/A_thaliana_rbcL.fasta"
+# The following are variables that are listed in a function to perform a blast search
+# The function requires:
+# fasta for draft genome, a blast database, a fasta to use as a query, specify whether the query is AA or DNA sequence, and an output fasta file name
+
+#
+setwd(project.folder)
+query.file.path <- "FASTAs/PWA97645_1.fasta"
 genome.file.name <- "A_annua_genome.fasta"
 genome.path <- "FASTAs/A_annua_genome.fasta"
 blast.db.path <- "BlastDBs/A_annua_genome.fasta"
 AA.BlastDB.folder <- "~/Dropbox/Genome_PlayGround/AA_BlastDB/"
 AA.ORF.folder <- "~/Dropbox/Genome_PlayGround/AA_ORFs/"
-min.e <- 0.00e+00
-query.type <- "DNA"
-blast.type <- "blastn"
-make.BlastDB <- T
-BlastDB.type <- "nucl"
+min.e <- 0.00005
+query.type <- "AA"
+blast.type <- "tblastn"
+make.BlastDB <- F
+BlastDB.type <- "prot"
 #
 
 # Read in the draft genome to be mined
@@ -66,7 +66,7 @@ cl
 
 # Filter out hits to just have unique scaffolds to extract from draft genome
 cl.filt <- subset(x = cl, E <= min.e)
-cl.filt
+ #SubjectID =="LBNU01006105.1"cl.filt
 cl.filt.unique <- cl.filt[!duplicated(cl.filt[,c('SubjectID')]),]
 cl.filt.unique
 nrow(cl)
@@ -89,9 +89,15 @@ DoBlastSearch(query.file.path <- "FASTAs/Dreb19.fna",
               BlastDB.type <- "nucl")
 ##########
 
+#################################################################################################################
+# Chonk 2: Extract scaffolds identified in blast search
+#################################################################################################################
+
+# This chunk of code uses the output of the previous chunk, the blast search, to find and extract scaffolds of interest
+
 # Extract scaffolds from draft genome and make a fasta file
-cl.filt.unique <- read.csv(file = "Unique_Filtered_Blast_Hit_Info.csv")
-header <- NULL
+cl.filt.unique <- read.csv(file = "Unique_Filtered_Blast_Hit_Info.csv") # Output of Chunk1
+header <- NULL # Generate empty objects to store the headers and sequences for the scaffolds of interest
 seq <- NULL
 #S.start <- NULL
 #S.end <- NULL
@@ -117,15 +123,15 @@ x
 ###
 x <- GetScaffolds(genome = genome)
 x
-writeFasta(data = x, filename = "~/Dropbox/Genome_PlayGround/Output_FASTAs/A_annua_rbcL_scaffolds.fasta")
+writeFasta(data = x, filename = "~/Dropbox/Genome_PlayGround/Output_FASTAs/LBNU01006105.1.fasta")
 ###
 
 #################################################################################################################
-# Chonk 2: Find some ORFs in them scaffolds
+# Chonk 3: Find some ORFs in them scaffolds
 #################################################################################################################
 
 # Find ORFs in scaffolds
-scaffold <- readLines("Output_FASTAs/A_annua_rbcL_scaffolds.fasta")
+scaffold <- readLines("Output_FASTAs/LBNU01009939.1.fasta")
 scaffoldID <- grep(pattern = "^>", x = scaffold, value = T)
 scaffoldID <- gsub(pattern = ">", replacement = "", x = scaffoldID)
 tryCatch(
@@ -143,13 +149,13 @@ tryCatch(
 #
 
 ###
-FindORFs(OutputFasta = "Output_FASTAs/A_annua_rbcL_scaffolds.fasta")
+FindORFs(OutputFasta = "Output_FASTAs/LBNU01006105.1.fasta")
 ###
 #################################################################################################################
-# Chonk 3: Annotate ORFs and write out a fasta file for each gene
+# Chonk 4: Annotate ORFs and write out a fasta file for each gene
 #################################################################################################################
 
-# Make data base of genes of interest to annotate ORFss
+# Make data base of genes of interest to annotate ORFs
 setwd(AA.ORF.folder)
 orf.files <- list.files()
 BlastDB.type <- "prot"
@@ -165,7 +171,7 @@ for(i in 1:length(orf.files)){
 #
 
 # Annotate ORFs of interest and write them to their own fasta
-annotated.genes.file <- "~/Dropbox/Genome_PlayGround/FASTAs/A_thaliana_rbcL_PROT.fasta"
+annotated.genes.file <- "~/Dropbox/Genome_PlayGround/FASTAs/PWA97645_1.fasta"
 AA.FASTA.out.folder <- "~/Dropbox/Genome_PlayGround/AA_FASTA/"
 BlastDB.type <- "prot"
 blast.type <- "blastp"
@@ -179,10 +185,12 @@ for(i in 1:length(orf.files)){
   annotated.fasta <- readAAStringSet(filepath = annotated.genes.file)
   bl <- blast(db = blast.db.path, type = blast.type)
   cl <- predict(bl, annotated.fasta) #annotated.fasta[1,]
-  if(nrow(cl) > 0){
+  blast.csv.filename <- paste0(orf.files[i], "_BlastOut.csv")
+  write.csv(x = cl, file = blast.csv.filename)
+}  
+  #if(nrow(cl) > 0){
   
-    blast.csv.filename <- paste0(orf.files[i], "_BlastOut.csv")
-    write.csv(x = cl, file = blast.csv.filename)
+
   
   # Extract and Annotate ORFs
     genes.seq <- readLines(con = orf.files[i])
@@ -190,7 +198,7 @@ for(i in 1:length(orf.files)){
     seq <- NULL
     
     setwd(AA.FASTA.out.folder)
-    for(i in 1:nrow(cl)){
+    for(i in 1:nrow(cl.filt)){
       header <- as.character(cl$QueryID[i])
       seq <- genes.seq[c(grep(paste(">", cl$QueryID[i], sep=''), genes.seq)+1)] 
       filename <- paste0(header, "_", as.character(cl$SubjectID[i]), ".fasta")
