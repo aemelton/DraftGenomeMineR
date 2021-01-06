@@ -19,22 +19,25 @@ setwd(project.folder)
 
 #
 setwd(project.folder)
-query.file.path <- "FASTAs/PWA97645_1.fasta"
-genome.file.name <- "A_annua_genome.fasta"
-genome.path <- "FASTAs/A_annua_genome.fasta"
-blast.db.path <- "BlastDBs/A_annua_genome.fasta"
+query.file.path <- "FASTAs/pip1_4.fa"
+genome.file.name <- "Artemesia_tridentata.hipmer.final_assembly.fa"
+genome.path <- "FASTAs/Artemesia_tridentata.hipmer.final_assembly.fa"
+blast.db.path <- "BlastDBs/Artemesia_tridentata.hipmer.final_assembly.fa"
 AA.BlastDB.folder <- "~/Dropbox/Genome_PlayGround/AA_BlastDB/"
 AA.ORF.folder <- "~/Dropbox/Genome_PlayGround/AA_ORFs/"
 min.e <- 0.00005
+perc.ident <- 100.000
 query.type <- "AA"
 blast.type <- "tblastn"
-make.BlastDB <- F
+make.BlastDB <- T
 BlastDB.type <- "prot"
 #
 
-# Read in the draft genome to be mined
+# Read in the draft genome to be mined. readLines will read in the fasta file line by line. 
+# Be aware of the return characters in your text files, as different operating systems may read these differently.
 genome <- readLines(con = genome.path)
-head(genome)
+head(genome) # Print the top 6 lines of the fasta. There should be no spaces in what is printed. Each header should be
+# on one line, followed by its entire scaffold on the next.
 #
 
 # Do you need to make a new blast database?
@@ -44,7 +47,7 @@ makeblastdb(file = genome.file.name, dbtype = BlastDB.type)
 }
 #
 
-# Read in the query
+# Read in the query. Specify whether it is a DNA (or RNA; these will be read the same) or amino acid sequence.
 setwd(project.folder)
 if (query.type == "DNA") {
   query <- readDNAStringSet(filepath = query.file.path,
@@ -64,9 +67,9 @@ cl <- predict(bl, query)
 cl
 #
 
-# Filter out hits to just have unique scaffolds to extract from draft genome
-cl.filt <- subset(x = cl, E <= min.e)
- #SubjectID =="LBNU01006105.1"cl.filt
+# Filter out hits to just have unique scaffolds to extract from draft genome (no need to extract the same scaffold 
+# multiple times if it has multiple hits)
+cl.filt <- subset(x = cl, Perc.Ident == perc.ident) # Several ways to filter: percent identity, E-value, scaffold ID... SubjectID =="LBNU01006105.1"cl.filt
 cl.filt.unique <- cl.filt[!duplicated(cl.filt[,c('SubjectID')]),]
 cl.filt.unique
 nrow(cl)
@@ -116,22 +119,26 @@ for(i in 1:nrow(cl.filt.unique)){
   #header[i] <- paste0(">", cl$SubjectID[i])
   #seq[i] <- paste(strsplit(seqRaw, split='')[[1]][as.numeric(start):as.numeric(end)], collapse = "")
 }
-x <- dplyr::tibble(name = header, seq = seq)
+x <- dplyr::tibble(name = header, seq = seq) # This will assemble the headers and sequences into an object that
+# can be written into a FASTA format file
 x
 #
 
 ###
 x <- GetScaffolds(genome = genome)
 x
-writeFasta(data = x, filename = "~/Dropbox/Genome_PlayGround/Output_FASTAs/LBNU01006105.1.fasta")
+writeFasta(data = x, filename = "~/Dropbox/Genome_PlayGround/Output_FASTAs/Scaffold128070.fasta")
 ###
 
 #################################################################################################################
 # Chonk 3: Find some ORFs in them scaffolds
 #################################################################################################################
 
-# Find ORFs in scaffolds
-scaffold <- readLines("Output_FASTAs/LBNU01009939.1.fasta")
+# Find ORFs in scaffolds; This is pretty memory intense. It will write out a lot of fasta
+# files - one for each ORF. Larger scafolds may not be able to annotated with this on
+# computers without a lot of free hard drive space
+
+scaffold <- readLines("Output_FASTAs/Scaffold128070.fasta")
 scaffoldID <- grep(pattern = "^>", x = scaffold, value = T)
 scaffoldID <- gsub(pattern = ">", replacement = "", x = scaffoldID)
 tryCatch(
@@ -149,7 +156,7 @@ tryCatch(
 #
 
 ###
-FindORFs(OutputFasta = "Output_FASTAs/LBNU01006105.1.fasta")
+FindORFs(OutputFasta = "Output_FASTAs/Scaffold128070.fasta")
 ###
 #################################################################################################################
 # Chonk 4: Annotate ORFs and write out a fasta file for each gene
