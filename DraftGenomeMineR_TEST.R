@@ -138,22 +138,32 @@ writeFasta(data = x, filename = "~/Dropbox/Genome_PlayGround/Output_FASTAs/Scaff
 # files - one for each ORF. Larger scafolds may not be able to annotated with this on
 # computers without a lot of free hard drive space
 
-scaffold <- readLines("Output_FASTAs/Scaffold128070.fasta")
+#scaffold <- readLines("Output_FASTAs/Scaffold128070.fasta")
+#scaffoldID <- grep(pattern = "^>", x = scaffold, value = T)
+#scaffoldID <- gsub(pattern = ">", replacement = "", x = scaffoldID)
+#tryCatch(
+#  {
+#  for(i in 1:length(scaffoldID)){
+#    findORFsTranslateDNA2AA(scaffold = scaffold, scaffoldID = scaffoldID[i])
+#  }
+#  }, warning = function(w) {
+#    warning-handler-code
+#  }, error = function(e) {
+#    error-handler-code
+#  }, finally = {
+#    cleanup-code
+#  })
+#
+
+scaffold <- readLines(OutputFasta)
 scaffoldID <- grep(pattern = "^>", x = scaffold, value = T)
 scaffoldID <- gsub(pattern = ">", replacement = "", x = scaffoldID)
 tryCatch(
   {
-  for(i in 1:length(scaffoldID)){
-    findORFsTranslateDNA2AA(scaffold = scaffold, scaffoldID = scaffoldID[i])
-  }
-  }, warning = function(w) {
-    warning-handler-code
-  }, error = function(e) {
-    error-handler-code
-  }, finally = {
-    cleanup-code
+    for(i in 1:length(scaffoldID)){
+      findORFsTranslateDNA2AA(scaffold = scaffold, scaffoldID = scaffoldID[i])
+    }
   })
-#
 
 ###
 FindORFs(OutputFasta = "Output_FASTAs/Scaffold128070.fasta")
