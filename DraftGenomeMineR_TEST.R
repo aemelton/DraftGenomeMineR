@@ -1,5 +1,9 @@
 ### AE Melton, 2020
 
+#################################################################################################################
+# Module 1: Set up the environment for genome mining
+#################################################################################################################
+
 # Load all the libraries!
 source("~/Dropbox/R_Packages/DraftGenomeMineR/RequiredLibraries.R") # This script contains a list of packages that will be installed, if needed, and load the libraries
 #
@@ -10,8 +14,9 @@ setwd(project.folder)
 #
 
 #################################################################################################################
-# Chonk 1: Load data, do a blast search
+# Module 2: Load data and perform a blast search
 #################################################################################################################
+
 
 # The following are variables that are listed in a function to perform a blast search
 # The function requires:
@@ -69,7 +74,7 @@ cl
 
 # Filter out hits to just have unique scaffolds to extract from draft genome (no need to extract the same scaffold 
 # multiple times if it has multiple hits)
-cl.filt <- subset(x = cl, Perc.Ident == perc.ident) # Several ways to filter: percent identity, E-value, scaffold ID... SubjectID =="LBNU01006105.1"cl.filt
+cl.filt <- subset(x = cl, SubjectID == "Scaffold128070") # Several ways to filter: percent identity, E-value, scaffold ID... SubjectID =="LBNU01006105.1"cl.filt
 cl.filt.unique <- cl.filt[!duplicated(cl.filt[,c('SubjectID')]),]
 cl.filt.unique
 nrow(cl)
@@ -93,7 +98,7 @@ DoBlastSearch(query.file.path <- "FASTAs/Dreb19.fna",
 ##########
 
 #################################################################################################################
-# Chonk 2: Extract scaffolds identified in blast search
+# Module 3: Extract scaffolds of interest identified in blast search
 #################################################################################################################
 
 # This chunk of code uses the output of the previous chunk, the blast search, to find and extract scaffolds of interest
@@ -131,7 +136,7 @@ writeFasta(data = x, filename = "~/Dropbox/Genome_PlayGround/Output_FASTAs/Scaff
 ###
 
 #################################################################################################################
-# Chonk 3: Find some ORFs in them scaffolds
+# Module 4: Identify ORFs in the extracted scaffolds
 #################################################################################################################
 
 # Find ORFs in scaffolds; This is pretty memory intense. It will write out a lot of fasta
@@ -155,13 +160,13 @@ writeFasta(data = x, filename = "~/Dropbox/Genome_PlayGround/Output_FASTAs/Scaff
 #  })
 #
 
-scaffold <- readLines(OutputFasta)
+scaffold <- readLines("Output_FASTAs/Scaffold128070.fasta")
 scaffoldID <- grep(pattern = "^>", x = scaffold, value = T)
 scaffoldID <- gsub(pattern = ">", replacement = "", x = scaffoldID)
 tryCatch(
   {
     for(i in 1:length(scaffoldID)){
-      findORFsTranslateDNA2AA(scaffold = scaffold, scaffoldID = scaffoldID[i])
+      findORFsTranslateDNA2AA(scaffold = scaffold, scaffoldID = scaffoldID[1])
     }
   })
 
@@ -169,7 +174,7 @@ tryCatch(
 FindORFs(OutputFasta = "Output_FASTAs/Scaffold128070.fasta")
 ###
 #################################################################################################################
-# Chonk 4: Annotate ORFs and write out a fasta file for each gene
+# Module 5: Annotate ORFs and write out a fasta containing the amino acid sequence for each scaffold
 #################################################################################################################
 
 # Make data base of genes of interest to annotate ORFs
@@ -188,7 +193,7 @@ for(i in 1:length(orf.files)){
 #
 
 # Annotate ORFs of interest and write them to their own fasta
-annotated.genes.file <- "~/Dropbox/Genome_PlayGround/FASTAs/PWA97645_1.fasta"
+annotated.genes.file <- "~/Dropbox/Genome_PlayGround/FASTAs/pip1_4.fa"
 AA.FASTA.out.folder <- "~/Dropbox/Genome_PlayGround/AA_FASTA/"
 BlastDB.type <- "prot"
 blast.type <- "blastp"
@@ -203,7 +208,7 @@ for(i in 1:length(orf.files)){
   bl <- blast(db = blast.db.path, type = blast.type)
   cl <- predict(bl, annotated.fasta) #annotated.fasta[1,]
   blast.csv.filename <- paste0(orf.files[i], "_BlastOut.csv")
-  write.csv(x = cl, file = blast.csv.filename)
+  write.csv(x = cl, file = blast.csv.filename, row.names = F)
 }  
   #if(nrow(cl) > 0){
   
@@ -236,3 +241,22 @@ for(i in 1:length(orf.files)){
   }
 }
 #
+
+##################################################################################################################
+# Module 6: Assemble proteins from AA_ORF files
+#################################################################################################################
+# How to automate this?
+
+
+##################################################################################################################
+# Module 7: Use the blast results to extract promoter sequences for analyses
+#################################################################################################################
+
+# This function will need some love. Currently, there is one filtering step and one string modifcation step that are example specific.
+
+GetPromoterSequences(orfs.report = "ORFs_report/Scaffold128070_ORFs.csv",
+                     blast.out = "AA_BlastDB/Scaffold128070_ORFs.fa_BlastOut.csv",
+                     scaffold.fasta = "Output_FASTAs/Scaffold128070.fasta",
+                     promoter.csv.file.out = "PROMOTER_OUT_TEST.csv",
+                     promoter.sequence.fasta = "PROMOTER_OUT_TEST.fa")
+  
