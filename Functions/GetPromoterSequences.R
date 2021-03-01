@@ -3,9 +3,10 @@
 
 GetPromoterSequences <- function(orfs.report,
                                  blast.out,
+                                 pattern.to.keep,
                                  scaffold.fasta,
                                  promoter.csv.file.out,
-                                 promoter.sequence.fasta){
+                                 promoter.sequence.fasta,promoters.folder){
   
   
   ### WOOWOOOWOOOWOOO LOOK HERE FOR EDITS FOR TESTING REMOVE THIS STUFF WOOWOOWOO
@@ -20,12 +21,12 @@ GetPromoterSequences <- function(orfs.report,
 ### Get just the orfs that match the gene  
 orf.blast.out <- read.csv(blast.out)
 orf.blast.out.filt <- filter(orf.blast.out, orf.blast.out$Perc.Ident == 100.000)
-orf.blast.out.filt.keep <- str_remove_all(string = orf.blast.out.filt$SubjectID, pattern = "Scaffold128070_")
+orf.blast.out.filt.keep <- str_remove_all(string = orf.blast.out.filt$SubjectID, pattern = pattern.to.keep)
 #
 
 #
 csv.full <- read.csv(file = orfs.report, sep = " ")
-#csv <- csv.full[csv.full$ORFID == orf.blast.out.filt.keep]
+csv <- csv.full[csv.full$ORFID == orf.blast.out.filt.keep,]
 csvsub <- csv.full %>%
   filter(csv.full$ORFID %in% orf.blast.out.filt.keep)
 csv <- csvsub[which(as.numeric(csvsub$start) >= 1500),]
@@ -47,6 +48,7 @@ Promoters$Start[Promoters$start < 0] <- 1
 scaffold <- readLines(scaffold.fasta)
 
 #Extract sequences to be mined for promoter sequences using PALACE
+setwd(promoters.folder)
 for(i in 1:nrow(Promoters)){
   #Add DNA sequence adapted to strand
   #Extract seq from FASTA file

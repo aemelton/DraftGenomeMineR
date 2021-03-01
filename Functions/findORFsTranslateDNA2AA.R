@@ -1,15 +1,16 @@
 # Sven Buerki
+### Modified By AEM to allow for changing the minimum ORF length
 #A function to findORFs in scaffold file (FASTA format) and produce AA sequences as well as report
-findORFsTranslateDNA2AA <- function(scaffold, scaffoldID){
+findORFsTranslateDNA2AA <- function(scaffold, scaffoldID, MinLen){
   #Extract scaffold sequence (and convert to right format)
   seqRaw <- scaffold[c(grep(paste(">", scaffoldID, sep=''), scaffold)+1)] 
   seqs <- DNAStringSet(seqRaw)
   
   #positive strands 
-  pos <- ORFik::findORFs(seqs, startCodon = "ATG", minimumLength = 40) 
+  pos <- ORFik::findORFs(seqs, startCodon = "ATG", minimumLength = MinLen) 
   #negative strands (DNAStringSet only if character) 
   
-  neg <- ORFik::findORFs(reverseComplement(DNAStringSet(seqs)), startCodon = "ATG", minimumLength = 40) 
+  neg <- ORFik::findORFs(reverseComplement(DNAStringSet(seqs)), startCodon = "ATG", minimumLength = MinLen) 
   pos <- relist(c(GRanges(pos,strand = "+"),GRanges(neg,strand = "-")),skeleton = merge(pos,neg))
   
   #Process output
