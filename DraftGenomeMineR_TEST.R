@@ -34,7 +34,7 @@ min.e <- 0.00005
 perc.ident <- 100.000
 query.type <- "AA"
 blast.type <- "tblastn"
-make.BlastDB <- F
+make.BlastDB <- T
 BlastDB.type <- "nucl"
 #
 
@@ -115,7 +115,7 @@ for(i in 1:nrow(cl.filt.unique)){
   #Extract seq from FASTA file
   #header[i] <- paste0(">", cl.filt.unique$SubjectID[i])
   header[i] <- as.character(cl.filt.unique$SubjectID[i])
-  seq[i] <- genome[c(grep(paste(">", cl.filt.unique$SubjectID[i], sep=''), genome)+1, fixed = T)]
+  seq[i] <- genome[c(match(paste(">", cl.filt.unique$SubjectID[i], sep=''), genome)+1, fixed = T)]
   
   #S.start[i] <- cl.filt.unique$S.start[i]
   #S.end[i] <- cl.filt.unique$S.end[i]
@@ -132,7 +132,7 @@ x
 ###
 x <- GetScaffolds(genome = genome)
 x
-writeFasta(data = x, filename = "~/Dropbox/Genome_PlayGround/Output_FASTAs/test.fa")
+writeFasta(data = x, filename = "~/Dropbox/Genome_PlayGround/Output_FASTAs/Scaffold151535.fa")
 ###
 
 #################################################################################################################
@@ -166,12 +166,12 @@ scaffoldID <- gsub(pattern = ">", replacement = "", x = scaffoldID)
 tryCatch(
   {
     for(i in 1:length(scaffoldID)){
-      findORFsTranslateDNA2AA(scaffold = scaffold, scaffoldID = scaffoldID[1], MinLen = 40)
+      findORFsTranslateDNA2AA(scaffold = scaffold, scaffoldID = scaffoldID[1])
     }
   })
 
 ###
-FindORFs(OutputFasta = "Output_FASTAs/test.fa", Minimum.Length = 40)
+FindORFs(OutputFasta = "Output_FASTAs/Scaffold151535.fa")
 ###
 #################################################################################################################
 # Module 5: Annotate ORFs and write out a fasta containing the amino acid sequence for each scaffold
@@ -182,7 +182,6 @@ setwd(AA.ORF.folder)
 orf.files <- list.files()
 BlastDB.type <- "prot"
 blast.type <- "blastp"
-perc.ident <- 100.00
 #setwd("AA_BlastDB/")
 file.copy(orf.files, AA.BlastDB.folder)
 ### All of this will need to be in a loop to loop over each scaffold, generate a db for each, and annotate the ORFs
@@ -210,10 +209,6 @@ for(i in 1:length(orf.files)){
   cl <- predict(bl, annotated.fasta) #annotated.fasta[1,]
   blast.csv.filename <- paste0(orf.files[i], "_BlastOut.csv")
   write.csv(x = cl, file = blast.csv.filename, row.names = F)
-  
-  cl.filt <- subset(x = cl, Perc.Ident >= perc.ident)
-  blast.csv.filename <- paste0(orf.files[i], "_FILTERED_BlastOut.csv")
-  write.csv(x = cl.filt, file = blast.csv.filename, row.names = F)
 }  
   #if(nrow(cl) > 0){
   
@@ -225,10 +220,10 @@ for(i in 1:length(orf.files)){
     seq <- NULL
     
     setwd(AA.FASTA.out.folder)
-    for(i in 1:nrow(cl.filt)){
-      header <- as.character(cl.filt$SubjectID[i])
-      seq <- genes.seq[c(match(paste(">", cl$SubjectID[i], sep=''), genes.seq)+1)] 
-      filename <- paste0(as.character(cl$SubjectID[i]), ".fasta")
+    for(i in 1:nrow(cl)){
+      header <- as.character(cl$QueryID[i])
+      seq <- genes.seq[c(grep(paste(">", cl$QueryID[i], sep=''), genes.seq)+1)] 
+      filename <- paste0(header, "_", as.character(cl$SubjectID[i]), ".fasta")
       x <- dplyr::tibble(name = header, seq = seq)
       writeFasta(data = x, filename = filename)
     }
@@ -241,52 +236,29 @@ for(i in 1:length(orf.files)){
     #  x <- dplyr::data_frame(name = header, seq = seq)
     #  writeFasta(data = x, filename = filename)
     #  }
-#  }else{
-#    next
-#  }
-#}
+  }else{
+    next
+  }
+}
 #
 
 ##################################################################################################################
 # Module 6: Assemble proteins from AA_ORF files
 #################################################################################################################
-protein.fasta.folder <- "~/Dropbox/Genome_PlayGround/Protein_FASTAs/"
-setwd(AA.FASTA.out.folder)
+# How to automate this?
 
-AA.orf.files <- list.files()
-
-AA.orfs <- sapply(AA.orf.files, readLines)
-
-orfs <- AA.orfs[c(grep(">", AA.orfs)+1)] 
-
-protein <- paste(orfs, collapse="")
-protein <- str_replace_all(protein, "[[:punct:]]", "")
-
-header <- ">PIP1-3"
-x <- dplyr::tibble(name = header, seq = protein)
-setwd("../Protein_FASTAs/")
-writeFasta(data = x, filename = "PIP1-3_Scaffold151535.fa")
-#
-##################
-protein.fasta.folder <- "~/Dropbox/Genome_PlayGround/Protein_FASTAs/"
-setwd(AA.FASTA.out.folder)
-GetProteinSequence(tmp.header = ">pip1_3", outfile.name = "pip1_3.fa")
-##################
 
 ##################################################################################################################
 # Module 7: Use the blast results to extract promoter sequences for analyses
 #################################################################################################################
 
 # This function will need some love. Currently, there is one filtering step and one string modifcation step that are example specific.
-promoters.folder <- "~/Dropbox/Genome_PlayGround/Promoters/"
-setwd(project.folder)
-GetPromoterSequences(orfs.report = "ORFs_report/Scaffold151535_ORFs.csv",
-                     blast.out = "AA_BlastDB/Scaffold151535_ORFs.fa_FILTERED_BlastOut.csv",
-                     pattern.to.keep = "Scaffold151535_",
-                     scaffold.fasta = "Output_FASTAs/test.fa",
+
+GetPromoterSequences(orfs.report = "ORFs_report/Scaffold128070_ORFs.csv",
+                     blast.out = "AA_BlastDB/Scaffold128070_ORFs.fa_BlastOut.csv",
+                     scaffold.fasta = "Output_FASTAs/Scaffold128070.fasta",
                      promoter.csv.file.out = "PROMOTER_OUT_TEST.csv",
-                     promoter.sequence.fasta = "PROMOTER_OUT_TEST.fa",
-                     promoters.folder = "~/Dropbox/Genome_PlayGround/Promoters/")
+                     promoter.sequence.fasta = "PROMOTER_OUT_TEST.fa")
 
 ##################################################################################################################
 # Module X: Align assembled proteins using MAFFT

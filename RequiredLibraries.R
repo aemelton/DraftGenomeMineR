@@ -25,7 +25,9 @@ list.of.packages <- c("ape",
 
 #
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
-if(length(new.packages)) install.packages(new.packages)
+if(length(new.packages) > 0){
+	install.packages(new.packages)
+	}
 #
 
 #
@@ -33,10 +35,7 @@ lapply(list.of.packages, require, character.only = TRUE)
 #
 
 #                      
-setwd("~/Dropbox/R_Packages/DraftGenomeMineR/Functions/")
+setwd("DraftGenomeMineR/Functions/")
 files.sources <- list.files()
 sapply(files.sources, source)
-#source("~/Dropbox/BSU_Research/Aquaporin/Scripts_SB/findORFsTranslateDNA2AA.R")
-#source("~/Dropbox/BSU_Research/Aquaporin/Scripts_AEM/processFile.R")
-#source("~/Dropbox/Genome_Things/writeFasta.R")
 #

@@ -68,7 +68,7 @@ genome.path <- "FASTAs/Artemesia_tridentata.hipmer.final_assembly.fa"
 blast.db.path <- "BlastDBs/Artemesia_tridentata.hipmer.final_assembly.fa"
 AA.BlastDB.folder <- "~/Dropbox/Genome_PlayGround/AA_BlastDB/"
 AA.ORF.folder <- "~/Dropbox/Genome_PlayGround/AA_ORFs/"
-min.e <- 5E-50
+max.e <- 5E-50
 perc.ident <- 90.000
 query.type <- "AA"
 blast.type <- "tblastn"

@@ -38,5 +38,5 @@ findORFsTranslateDNA2AA <- function(scaffold, scaffoldID, MinLen){
   system(paste("cat AA_ORFs/", pos$scaffoldID[i], "* > AA_ORFs/", pos$scaffoldID[i], "_ORFs.fa", sep=''))
   system(paste("rm AA_ORFs/", pos$scaffoldID[i], "_ORF_*", sep=""))
   #Save pos file
-  write.table(pos, file = paste("ORFs_report/",pos$scaffoldID[i], "_", "ORFs.csv", sep=''), col.names = T, row.names = F, quote = F)
+  write.csv(pos, file = paste("ORFs_report/",pos$scaffoldID[i], "_", "ORFs.csv", sep=''), col.names = T, row.names = F, quote = F)
 } 
