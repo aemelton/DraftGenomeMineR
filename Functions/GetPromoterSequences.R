@@ -6,7 +6,9 @@ GetPromoterSequences <- function(orfs.report,
                                  pattern.to.keep,
                                  scaffold.fasta,
                                  promoter.csv.file.out,
-                                 promoter.sequence.fasta,promoters.folder){
+                                 promoter.sequence.fasta,
+                                 promoters.folder,
+                                 perc.ident.threshold){
   
   
   ### WOOWOOOWOOOWOOO LOOK HERE FOR EDITS FOR TESTING REMOVE THIS STUFF WOOWOOWOO
@@ -20,12 +22,12 @@ GetPromoterSequences <- function(orfs.report,
 
 ### Get just the orfs that match the gene  
 orf.blast.out <- read.csv(blast.out)
-orf.blast.out.filt <- filter(orf.blast.out, orf.blast.out$Perc.Ident == 100.000)
+orf.blast.out.filt <- filter(orf.blast.out, orf.blast.out$Perc.Ident >= perc.ident.threshold)
 orf.blast.out.filt.keep <- str_remove_all(string = orf.blast.out.filt$SubjectID, pattern = pattern.to.keep)
 #
 
 #
-csv.full <- read.csv(file = orfs.report, sep = " ")
+csv.full <- read.csv(file = orfs.report, sep = ",")
 csv <- csv.full[csv.full$ORFID == orf.blast.out.filt.keep,]
 csvsub <- csv.full %>%
   filter(csv.full$ORFID %in% orf.blast.out.filt.keep)

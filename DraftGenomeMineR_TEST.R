@@ -24,10 +24,10 @@ setwd(project.folder)
 
 #
 setwd(project.folder)
-query.file.path <- "FASTAs/Scaffold151535.fa"
-genome.file.name <- "Artemesia_tridentata.hipmer.final_assembly.fa"
-genome.path <- "FASTAs/Artemesia_tridentata.hipmer.final_assembly.fa"
-blast.db.path <- "BlastDBs/Artemesia_tridentata.hipmer.final_assembly.fa"
+query.file.path <- "FASTAs/prot_slac1_brassica.fst"
+genome.file.name <- "final.contigs.fa"
+genome.path <- "FASTAs/final.contigs.fa"
+blast.db.path <- "BlastDBs/final.contigs.fa"
 AA.BlastDB.folder <- "~/Dropbox/Genome_PlayGround/AA_BlastDB/"
 AA.ORF.folder <- "~/Dropbox/Genome_PlayGround/AA_ORFs/"
 min.e <- 0.00005
@@ -74,7 +74,7 @@ cl
 
 # Filter out hits to just have unique scaffolds to extract from draft genome (no need to extract the same scaffold 
 # multiple times if it has multiple hits)
-cl.filt <- subset(x = cl, SubjectID == "Scaffold151535") # Several ways to filter: percent identity, E-value, scaffold ID... SubjectID =="LBNU01006105.1"cl.filt
+cl.filt <- subset(x = cl, Perc.Ident >= 75) # Several ways to filter: percent identity, E-value, scaffold ID... SubjectID =="LBNU01006105.1"cl.filt
 cl.filt.unique <- cl.filt[!duplicated(cl.filt[,c('SubjectID')]),]
 cl.filt.unique
 nrow(cl)
@@ -85,9 +85,9 @@ write.csv(x = cl.filt.unique, file = "Unique_Filtered_Blast_Hit_Info.csv", row.n
 
 ##########
 DoBlastSearch(query.file.path <- "FASTAs/Dreb19.fna",
-              genome.file.name <- "Artemesia_tridentata.hipmer.final_assembly.fa",
-              genome.path <- "FASTAs/Artemesia_tridentata.hipmer.final_assembly.fa",
-              blast.db.path <- "BlastDBs/Artemesia_tridentata.hipmer.final_assembly.fa",
+              genome.file.name <- "final.contigs.fa",
+              genome.path <- "FASTAs/final.contigs.fa",
+              blast.db.path <- "BlastDBs/final.contigs.fa",
               AA.BlastDB.folder <- "~/Dropbox/Genome_PlayGround/AA_BlastDB/",
               AA.ORF.folder <- "~/Dropbox/Genome_PlayGround/AA_ORFs/",
               min.e <- 0.00e+00,
@@ -130,9 +130,9 @@ x
 #
 
 ###
-x <- GetScaffolds(genome = genome)
+x <- GetScaffolds(BlastHitFile = "Unique_Filtered_Blast_Hit_Info.csv", genome = genome)
 x
-writeFasta(data = x, filename = "~/Dropbox/Genome_PlayGround/Output_FASTAs/Scaffold151535.fa")
+writeFasta(data = x, filename = "~/Dropbox/Genome_PlayGround/Output_FASTAs/slac1_best_hits.fa")
 ###
 
 #################################################################################################################
@@ -160,18 +160,18 @@ writeFasta(data = x, filename = "~/Dropbox/Genome_PlayGround/Output_FASTAs/Scaff
 #  })
 #
 
-scaffold <- readLines("Output_FASTAs/Scaffold151535.fa")
+scaffold <- readLines("Output_FASTAs/slac1_best_hits.fa")
 scaffoldID <- grep(pattern = "^>", x = scaffold, value = T)
 scaffoldID <- gsub(pattern = ">", replacement = "", x = scaffoldID)
 tryCatch(
   {
     for(i in 1:length(scaffoldID)){
-      findORFsTranslateDNA2AA(scaffold = scaffold, scaffoldID = scaffoldID[1])
+      findORFsTranslateDNA2AA(scaffold = scaffold, scaffoldID = scaffoldID[i])
     }
   })
 
 ###
-FindORFs(OutputFasta = "Output_FASTAs/Scaffold151535.fa")
+FindORFs(OutputFasta = "Output_FASTAs/slac1_best_hits.fa", Minimum.Length = 40)
 ###
 #################################################################################################################
 # Module 5: Annotate ORFs and write out a fasta containing the amino acid sequence for each scaffold
@@ -193,7 +193,7 @@ for(i in 1:length(orf.files)){
 #
 
 # Annotate ORFs of interest and write them to their own fasta
-annotated.genes.file <- "~/Dropbox/Genome_PlayGround/FASTAs/Scaffold151535.fa"
+annotated.genes.file <- "~/Dropbox/Genome_PlayGround/FASTAs/prot_slac1_brassica.fst"
 AA.FASTA.out.folder <- "~/Dropbox/Genome_PlayGround/AA_FASTA/"
 BlastDB.type <- "prot"
 blast.type <- "blastp"
@@ -254,11 +254,14 @@ for(i in 1:length(orf.files)){
 
 # This function will need some love. Currently, there is one filtering step and one string modifcation step that are example specific.
 
-GetPromoterSequences(orfs.report = "ORFs_report/Scaffold128070_ORFs.csv",
-                     blast.out = "AA_BlastDB/Scaffold128070_ORFs.fa_BlastOut.csv",
-                     scaffold.fasta = "Output_FASTAs/Scaffold128070.fasta",
+GetPromoterSequences(orfs.report = "ORFs_report/k141_43477765_ORFs.csv",
+                     blast.out = "AA_BlastDB/k141_43477765_ORFs.fa_BlastOut.csv",
+                     scaffold.fasta = "Output_FASTAs/slac1_best_hits.fa",
                      promoter.csv.file.out = "PROMOTER_OUT_TEST.csv",
-                     promoter.sequence.fasta = "PROMOTER_OUT_TEST.fa")
+                     promoter.sequence.fasta = "PROMOTER_OUT_TEST.fa",
+                     pattern.to.keep = "k141_43477765_",
+                     promoters.folde = "~/Desktop/",
+                     perc.ident.threshold = 75)
 
 ##################################################################################################################
 # Module X: Align assembled proteins using MAFFT
@@ -292,10 +295,10 @@ ClassifyPromoterElements(New.Place.DB = "~/Dropbox/BSU_Research/Aquaporin/OutFil
                          out.file = "~/Desktop/testPromoEleClass.csv")
 
 ######################
-
-GetPromoterElementsPerScaffold(Promoters.Folder <- "~/Dropbox/BSU_Research/Aquaporin/OutFiles_AEM/Promoters/",
-                               Promoters <- "Promoters_sequences_AEM.csv",
-                               New.Place.Folder <- "New_PLACE_txt/",
+setwd(project.folder)
+GetPromoterElementsPerScaffold(Promoters.Folder <- "~/Dropbox/Genome_PlayGround/Promoters/",
+                               Promoters <- "~/Desktop/PROMOTER_OUT_TEST.csv",
+                               New.Place.Folder <- "~/Dropbox/Genome_PlayGround/New_PLACE_txt",
                                Output.Folder <- "~/Desktop/Promoter_CSV_TEST/",
                                Output.Filename <- "~/Desktop/RDE_per_Scaffold_Counts.csv")
 

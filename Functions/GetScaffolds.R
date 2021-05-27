@@ -12,11 +12,11 @@ GetScaffolds <- function(BlastHitFile = "Unique_Filtered_Blast_Hit_Info.csv", ge
     for(i in 1:nrow(cl.filt.unique)){
   
       header[i] <- as.character(cl.filt.unique$SubjectID[i])
-      seq[i] <- genome[c(match(paste(">", cl.filt.unique$SubjectID[i], sep=''), genome)+1)]
+      seq[i] <- genome[c(grep(paste(">", header[i], " .*", sep=''), genome)+1)]
       }
     } else {
       header <- as.character(cl.filt.unique$SubjectID)
-      seq <- genome[c(match(paste(">", cl.filt.unique$SubjectID, sep=''), genome)+1)]
+      seq <- genome[c(grep(paste(">", cl.filt.unique$SubjectID, ".*", sep=''), genome)+1)]
     }
   x <- dplyr::tibble(name = header, seq = seq)
   return(x)

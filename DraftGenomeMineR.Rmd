@@ -1,6 +1,6 @@
 ---
 title: "DraftGenomeMineR"
-author: "Anthony E. Melton (PostDoctoral Research Associate, Boise State University),  \nSven Buerki (Assistant Professor, Boise State University),  \nOthers?"
+author: "Anthony E. Melton (PostDoctoral Research Associate, Boise State University),  \nSven Buerki (Assistant Professor, Boise State University)"
 date: "1/21/2021"
 output:
   pdf_document: default

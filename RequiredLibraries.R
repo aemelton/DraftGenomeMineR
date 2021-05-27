@@ -35,7 +35,7 @@ lapply(list.of.packages, require, character.only = TRUE)
 #
 
 #                      
-setwd("DraftGenomeMineR/Functions/")
+setwd("~/Dropbox/R_Packages/DraftGenomeMineR/Functions/")
 files.sources <- list.files()
 sapply(files.sources, source)
 #
