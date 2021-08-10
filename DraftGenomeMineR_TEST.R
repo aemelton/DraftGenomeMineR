@@ -24,14 +24,15 @@ setwd(project.folder)
 
 #
 setwd(project.folder)
-query.file.path <- "FASTAs/prot_slac1_brassica.fst"
-genome.file.name <- "final.contigs.fa"
-genome.path <- "FASTAs/final.contigs.fa"
-blast.db.path <- "BlastDBs/final.contigs.fa"
+query.file.path <- "FASTAs/PIP1_3.fa"
+genome.file.name <- "Draft_Genome_Assembly.fasta"
+genome.path <- "FASTAs/Draft_Genome_Assembly.fasta"
+blast.db.path <- "BlastDBs/Draft_Genome_Assembly.fasta"
 AA.BlastDB.folder <- "~/Dropbox/Genome_PlayGround/AA_BlastDB/"
 AA.ORF.folder <- "~/Dropbox/Genome_PlayGround/AA_ORFs/"
-min.e <- 0.00005
-perc.ident <- 100.000
+max.e <- 0.00001
+min.bit <- 50
+perc.ident <- 50.000
 query.type <- "AA"
 blast.type <- "tblastn"
 make.BlastDB <- T
@@ -132,7 +133,7 @@ x
 ###
 x <- GetScaffolds(BlastHitFile = "Unique_Filtered_Blast_Hit_Info.csv", genome = genome)
 x
-writeFasta(data = x, filename = "~/Dropbox/Genome_PlayGround/Output_FASTAs/slac1_best_hits.fa")
+writeFasta(data = x, filename = "~/Dropbox/Genome_PlayGround/Output_FASTAs/OUT.fa")
 ###
 
 #################################################################################################################
@@ -160,7 +161,7 @@ writeFasta(data = x, filename = "~/Dropbox/Genome_PlayGround/Output_FASTAs/slac1
 #  })
 #
 
-scaffold <- readLines("Output_FASTAs/slac1_best_hits.fa")
+scaffold <- readLines("Output_FASTAs/OUT.fa")
 scaffoldID <- grep(pattern = "^>", x = scaffold, value = T)
 scaffoldID <- gsub(pattern = ">", replacement = "", x = scaffoldID)
 tryCatch(
@@ -171,7 +172,7 @@ tryCatch(
   })
 
 ###
-FindORFs(OutputFasta = "Output_FASTAs/slac1_best_hits.fa", Minimum.Length = 40)
+FindORFs(OutputFasta = "Output_FASTAs/OUT.fa", Minimum.Length = 40)
 ###
 #################################################################################################################
 # Module 5: Annotate ORFs and write out a fasta containing the amino acid sequence for each scaffold
@@ -190,10 +191,10 @@ setwd(AA.BlastDB.folder)
 for(i in 1:length(orf.files)){
   makeblastdb(file = orf.files[i], dbtype = BlastDB.type)
 }
-#
+
 
 # Annotate ORFs of interest and write them to their own fasta
-annotated.genes.file <- "~/Dropbox/Genome_PlayGround/FASTAs/prot_slac1_brassica.fst"
+annotated.genes.file <- "~/Dropbox/Genome_PlayGround/FASTAs/PIP1_3.fa"
 AA.FASTA.out.folder <- "~/Dropbox/Genome_PlayGround/AA_FASTA/"
 BlastDB.type <- "prot"
 blast.type <- "blastp"
@@ -236,16 +237,24 @@ for(i in 1:length(orf.files)){
     #  x <- dplyr::data_frame(name = header, seq = seq)
     #  writeFasta(data = x, filename = filename)
     #  }
-  }else{
-    next
-  }
-}
+#  }else{
+#    next
+#  }
+#}
 #
-
+##########
+setwd(project.folder)
+AnnotateORFs(AA.BlastDB.folder <- "~/Dropbox/Genome_PlayGround/AA_BlastDB/",
+             AA.ORF.folder <- "~/Dropbox/Genome_PlayGround/AA_ORFs/",
+             BlastDB.type = "prot",
+             blast.type = "blastp",
+             annotated.genes.file <- "~/Dropbox/Genome_PlayGround/FASTAs/PIP1_3.fa",
+             AA.FASTA.out.folder <- "~/Dropbox/Genome_PlayGround/AA_FASTA/")
+##########
 ##################################################################################################################
 # Module 6: Assemble proteins from AA_ORF files
 #################################################################################################################
-# How to automate this?
+
 
 
 ##################################################################################################################
@@ -253,15 +262,15 @@ for(i in 1:length(orf.files)){
 #################################################################################################################
 
 # This function will need some love. Currently, there is one filtering step and one string modifcation step that are example specific.
-
-GetPromoterSequences(orfs.report = "ORFs_report/k141_43477765_ORFs.csv",
-                     blast.out = "AA_BlastDB/k141_43477765_ORFs.fa_BlastOut.csv",
-                     scaffold.fasta = "Output_FASTAs/slac1_best_hits.fa",
+setwd(project.folder)
+GetPromoterSequences(orfs.report = "ORFs_report/Scaffold151535_ORFs.csv",
+                     blast.out = "AA_BlastDB/Scaffold151535_ORFs.fa_BlastOut.csv",
+                     scaffold.fasta = "Output_FASTAs/OUT.fa",
                      promoter.csv.file.out = "PROMOTER_OUT_TEST.csv",
                      promoter.sequence.fasta = "PROMOTER_OUT_TEST.fa",
-                     pattern.to.keep = "k141_43477765_",
-                     promoters.folde = "~/Desktop/",
-                     perc.ident.threshold = 75)
+                     pattern.to.keep = "Scaffold151535_",
+                     promoters.folder = "Promoters/",
+                     perc.ident.threshold = 50)
 
 ##################################################################################################################
 # Module X: Align assembled proteins using MAFFT

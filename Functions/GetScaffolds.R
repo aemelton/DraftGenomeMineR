@@ -1,6 +1,6 @@
 ### AE Melton, 2020
 
-GetScaffolds <- function(BlastHitFile = "Unique_Filtered_Blast_Hit_Info.csv", genome){
+GetScaffolds <- function(BlastHitFile, genome){
 
   # Extract scaffolds from draft genome and make a fasta file
   cl.filt.unique <- read.csv(file = BlastHitFile)
@@ -12,11 +12,11 @@ GetScaffolds <- function(BlastHitFile = "Unique_Filtered_Blast_Hit_Info.csv", ge
     for(i in 1:nrow(cl.filt.unique)){
   
       header[i] <- as.character(cl.filt.unique$SubjectID[i])
-      seq[i] <- genome[c(grep(paste(">", header[i], " .*", sep=''), genome)+1)]
+      seq[i] <- genome[c(match(paste(">", header[i], sep=''), genome)+1)]
       }
     } else {
       header <- as.character(cl.filt.unique$SubjectID)
-      seq <- genome[c(grep(paste(">", cl.filt.unique$SubjectID, ".*", sep=''), genome)+1)]
+      seq <- genome[c(match(paste(">", header, sep=''), genome)+1)]
     }
   x <- dplyr::tibble(name = header, seq = seq)
   return(x)
