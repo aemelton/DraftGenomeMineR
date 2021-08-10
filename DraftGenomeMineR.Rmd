@@ -1,7 +1,7 @@
 ---
 title: "DraftGenomeMineR"
-author: "Anthony E. Melton (PostDoctoral Research Associate, Boise State University),  \nSven Buerki (Assistant Professor, Boise State University)"
-date: "1/21/2021"
+author: "Anthony E. Melton (PostDoctoral Research Associate, Boise State University)"
+date: "1/6/2021"
 output:
   pdf_document: default
   html_document: default
@@ -9,7 +9,7 @@ output:
 
 # Introduction
 
-Genome sequencing and genomics are rapidly growing disciplines in biology. As our abilities to sequence and assemble larger, more complicated genomes, tools for analyzing genomes must also be developed. This set of R scripts, dubbed **DraftGenomeMineR**, will help users identify genes of interest, annotate scaffolds, and perform analyses, such as phylogenetic reconstructions and promoter element analyses. The motivation behind this suite of scripts was to create a *reproducible* and *easy-to-use* pipeline to facilitate analyses on draft genomes. Please note that working versions of BLAST+, MAFFT, and RAxML must be installed locally to run parts of these scripts.
+Genome sequencing and genomics are rapidly growing disciplines in biology. As our abilities to sequence and assemble larger, more complicated genomes, tools for analyzing genomes must also be developed. This set of R scripts, dubbed **DraftGenomeMineR**, will help users identify genes of interest, annotate scaffolds, and perform analyses, such as phylogenetic reconstructions and promoter element analyses. The motivation behind this suite of scripts was to create a *reproducible* and *easy-to-use* pipeline to facilitate analyses on draft genomes.
 
 **DraftGenomeMineR** can be used to:  
   - Identify scaffolds that contain genes of interest  
@@ -62,18 +62,18 @@ The following are variables that are listed in a function to perform a blast sea
 
 ```{r}
 
-query.file.path <- "FASTAs/Scaffold151535.fa"
+query.file.path <- "FASTAs/pip1_4.fa"
 genome.file.name <- "Artemesia_tridentata.hipmer.final_assembly.fa"
 genome.path <- "FASTAs/Artemesia_tridentata.hipmer.final_assembly.fa"
 blast.db.path <- "BlastDBs/Artemesia_tridentata.hipmer.final_assembly.fa"
 AA.BlastDB.folder <- "~/Dropbox/Genome_PlayGround/AA_BlastDB/"
 AA.ORF.folder <- "~/Dropbox/Genome_PlayGround/AA_ORFs/"
-max.e <- 5E-50
-perc.ident <- 90.000
+min.e <- 0.00005
+perc.ident <- 100.000
 query.type <- "AA"
 blast.type <- "tblastn"
 make.BlastDB <- T
-BlastDB.type <- "nucl"
+BlastDB.type <- "prot"
 
 ```
 
@@ -128,11 +128,11 @@ head(cl)
 
 ```
 
-Filter out hits to just have unique scaffolds to extract from draft genome (no need to extract the same scaffold multiple times if it has multiple hits). There are several ways to filter: percent identity, E-value, scaffold ID....
+Filter out hits to just have unique scaffolds to extract from draft genome (no need to extract the same scaffold multiple times if it has multiple hits). There are several ways to filter: percent identity, E-value, scaffold ID... 
 
 ```{r}
 
-cl.filt <- subset(x = cl, SubjectID == "Scaffold151535")
+cl.filt <- subset(x = cl, SubjectID == "Scaffold128070") 
 cl.filt.unique <- cl.filt[!duplicated(cl.filt[,c('SubjectID')]),] # SubjectID is the column that contains the scaffold names
 cl.filt.unique
 nrow(cl)
@@ -155,12 +155,12 @@ seq <- NULL
 for(i in 1:nrow(cl.filt.unique)){
 
   header[i] <- as.character(cl.filt.unique$SubjectID[i])
-  seq[i] <- genome[c(match(paste(">", cl.filt.unique$SubjectID[i], sep=''), genome)+1)]
+  seq[i] <- genome[c(grep(paste(">", cl.filt.unique$SubjectID[i], sep=''), genome)+1)]
   
 }
 x <- dplyr::tibble(name = header, seq = seq) # This will assemble the headers and sequences into an object that can be written into a FASTA format file
 x
-writeFasta(data = x, filename = "~/Dropbox/Genome_PlayGround/Output_FASTAs/test.fasta")
+writeFasta(data = x, filename = "~/Dropbox/Genome_PlayGround/Output_FASTAs/Scaffold128070.fasta")
 
 ```
 
@@ -170,35 +170,21 @@ Find ORFs in scaffolds; This is pretty memory intense. It will write out a lot o
 
 ```{r}
 
-#scaffolds <- readLines("Output_FASTAs/test.fasta")
-#scaffoldIDs <- grep(pattern = "^>", x = scaffolds, value = T)
-#scaffoldIDs <- gsub(pattern = ">", replacement = "", x = scaffoldIDs)
+scaffold <- readLines("Output_FASTAs/Scaffold128070.fasta")
+scaffoldID <- grep(pattern = "^>", x = scaffold, value = T)
+scaffoldID <- gsub(pattern = ">", replacement = "", x = scaffoldID)
 #tryCatch(
 #  {
-#    for(j in 1:length(scaffoldIDs)){
-#      header <- scaffoldIDs[j]
-#      seq <- scaffolds[c(match(paste(">", header, sep=''), scaffolds)+1)]
-#  
-#      findORFsTranslateDNA2AA(scaffold = seq, scaffoldID = header)
-#     }
+#    for(i in 1:length(scaffoldID)){
+      findORFsTranslateDNA2AA(scaffold = scaffold, scaffoldID = scaffoldID) #[i]
+ #    }
 #  })
 
-#for (j in 1:length(scaffoldIDs)) {
-
-
-#  header <- scaffoldIDs[j]
-#  seq <- scaffolds[c(match(paste(">", header, sep=''), scaffolds)+1)]
-
-#    findORFsTranslateDNA2AA(scaffold = seq, scaffoldID = header, MinLen = 40)
-
-#}
-
-FindORFs(OutputFasta = "Output_FASTAs/test.fasta", Minimum.Length = 40)
 ```
 
 # Module 5: Annotate ORFs and write out a fasta containing the amino acid sequence for each scaffold
 
-The next chunk of code will make data base of genes of interest to annotate ORFs. This chunk has not been condensed into function form, yet.
+The next chunk of code will make data base of genes of interest to annotate ORFs. This chunk has not been condensed into function form, yet. :(
 
 ```{r}
 
@@ -217,7 +203,7 @@ for(i in 1:length(orf.files)){
 #
 
 # Annotate ORFs of interest and write them to their own fasta
-annotated.genes.file <- "~/Dropbox/Genome_PlayGround/FASTAs/Scaffold151535.fa"
+annotated.genes.file <- "~/Dropbox/Genome_PlayGround/FASTAs/pip1_4.fa"
 AA.FASTA.out.folder <- "~/Dropbox/Genome_PlayGround/AA_FASTA/"
 BlastDB.type <- "prot"
 blast.type <- "blastp"
@@ -232,11 +218,7 @@ for(i in 1:length(orf.files)){
   bl <- blast(db = blast.db.path, type = blast.type)
   cl <- predict(bl, annotated.fasta) #annotated.fasta[1,]
   blast.csv.filename <- paste0(orf.files[i], "_BlastOut.csv")
-  write.csv(x = cl, file = blast.csv.filename, row.names = F)
-  
-  cl.filt <- subset(x = cl, Perc.Ident >= perc.ident)
-  blast.csv.filename <- paste0(orf.files[i], "_FILTERED_BlastOut.csv")
-  write.csv(x = cl.filt, file = blast.csv.filename, row.names = F)
+  write.csv(x = cl, file = blast.csv.filename)
 }  
 
 setwd(AA.ORF.folder)
@@ -246,9 +228,9 @@ seq <- NULL
 
 setwd(AA.FASTA.out.folder)
 for(i in 1:nrow(cl)){
-  header <- as.character(cl.filt$QueryID[i])
-  seq <- genes.seq[c(match(paste(">", cl.filt$QueryID[i], sep=''), genes.seq)+1)] 
-  filename <- paste0(as.character(cl.filt$SubjectID[i]), ".fasta")
+  header <- as.character(cl$QueryID[i])
+  seq <- genes.seq[c(grep(paste(">", cl$QueryID[i], sep=''), genes.seq)+1)] 
+  filename <- paste0(header, "_", as.character(cl$SubjectID[i]), ".fasta")
   x <- dplyr::tibble(name = header, seq = seq)
   writeFasta(data = x, filename = filename)
 }
@@ -257,25 +239,7 @@ for(i in 1:nrow(cl)){
 
 # Module 6: Assemble proteins from AA_ORF files
 
-```{r}
-protein.fasta.folder <- "~/Dropbox/Genome_PlayGround/Protein_FASTAs/"
-setwd(AA.FASTA.out.folder)
-
-AA.orf.files <- list.files()
-
-AA.orfs <- sapply(AA.orf.files, readLines)
-
-orfs <- AA.orfs[c(grep(">", AA.orfs)+1)] 
-
-protein <- paste(orfs, collapse="")
-protein <- str_replace_all(protein, "[[:punct:]]", "")
-
-header <- ">PIP1-3"
-x <- dplyr::tibble(name = header, seq = protein)
-setwd("../Protein_FASTAs/")
-writeFasta(data = x, filename = "PIP1-3_Scaffold151535.fa")
-
-```
+How to automate this? TBD.
 
 # Module 7: Use the blast results to extract promoter sequences for analyses
 
@@ -283,20 +247,20 @@ This function will need some love. Currently, there is one filtering step and on
 
 ```{r}
 
-orfs.report = "ORFs_report/Scaffold151535_ORFs.csv"
-blast.out = "AA_BlastDB/Scaffold151535_ORFs.fa_FILTERED_BlastOut.csv"
-scaffold.fasta = "Output_FASTAs/test.fasta"
+orfs.report = "ORFs_report/Scaffold128070_ORFs.csv"
+blast.out = "AA_BlastDB/Scaffold128070_ORFs.fa_BlastOut.csv"
+scaffold.fasta = "Output_FASTAs/Scaffold128070.fasta"
 promoter.csv.file.out = "PROMOTER_OUT_TEST.csv"
 promoter.sequence.fasta = "PROMOTER_OUT_TEST.fa"
 
 orf.blast.out <- read.csv(blast.out)
 orf.blast.out.filt <- filter(orf.blast.out, orf.blast.out$Perc.Ident == 100.000)
-orf.blast.out.filt.keep <- str_remove_all(string = orf.blast.out.filt$SubjectID, pattern = "Scaffold151535_")
+orf.blast.out.filt.keep <- str_remove_all(string = orf.blast.out.filt$SubjectID, pattern = "Scaffold128070_")
 #
 
 #
 csv.full <- read.csv(file = orfs.report, sep = " ")
-csv <- csv.full[csv.full$ORFID == orf.blast.out.filt.keep,]
+#csv <- csv.full[csv.full$ORFID == orf.blast.out.filt.keep]
 csvsub <- csv.full %>%
   filter(csv.full$ORFID %in% orf.blast.out.filt.keep)
 csv <- csvsub[which(as.numeric(csvsub$start) >= 1500),]
@@ -318,7 +282,6 @@ Promoters$Start[Promoters$start < 0] <- 1
 scaffold <- readLines(scaffold.fasta)
 
 #Extract sequences to be mined for promoter sequences using PALACE
-setwd("Promoters/")
 for(i in 1:nrow(Promoters)){
   #Add DNA sequence adapted to strand
   #Extract seq from FASTA file
@@ -363,68 +326,4 @@ write.table(FASTA, file = promoter.sequence.fasta, col.names = F, row.names = F,
 #
 
 head(read.csv("~/Dropbox/Genome_PlayGround/PROMOTER_OUT_TEST.csv"))
-```
-
-# Module X: Align assembled proteins using MAFFT
-
-This function will perform a MAFFT alignment of your mined sequences. Basic set up for now, will add in more functionality later.
-
-```{r}
-
-DoMafftAlignment(align.method = "--auto",
-in.file = "~/Dropbox/BSU_Research/Aquaporin/OutFiles_AEM/FASTA/AQP_AEM_trim.fa",
-out.file = "~/Desktop/Test.fa")
-
-```
-
-# Module X: Use RAxML to reconstruct a phylogeny
-
-Currently, this is just a basic set up. I will add in more functionality of RAxML later.
-
-```{r}
-
-setwd("~/Desktop/")
-DoRAxMLReconstruction(algorithm = "a", 
-                      in.file = "AQP_AEM_trim.fa", 
-                      out.file = "raxTest", 
-                      model = "PROTGAMMAGTR", 
-                      parsimony.random.seed = 12345, 
-                      bootstrap.random.seed = 12345,
-                      BS.rep.count = 100)
-
-```
-
-One thing that I don't have running in R right now is the New Place promoter element detection. Not sure if there is an API we could use to automate this.... Will need to investigate.
-
-# Module X: Classifying RDE's identified by New Place
-
-This section will require that you have the New Place database downloaded and stored locally (LINK TO NEW PLACE DATABSE FILE).
-
-```{r}
-
-ClassifyPromoterElements(New.Place.DB = "~/Dropbox/BSU_Research/Aquaporin/OutFiles_AEM/Promoters/New_PLACE_data_site/place_seq.txt",
-                         out.file = "~/Desktop/testPromoEleClass.csv")
-
-```
-
-```{r}
-
-GetPromoterElementsPerScaffold(Promoters.Folder <- "~/Dropbox/BSU_Research/Aquaporin/OutFiles_AEM/Promoters/",
-                               Promoters <- "Promoters_sequences_AEM.csv",
-                               New.Place.Folder <- "New_PLACE_txt/",
-                               Output.Folder <- "~/Desktop/Promoter_CSV_TEST/",
-                               Output.Filename <- "~/Desktop/RDE_per_Scaffold_Counts.csv")
-
-```
-
-```{r}
-
-GetORFMap(scaffold.file = "~/Dropbox/Genome_PlayGround/Output_FASTAs/test.fa",
-          ORF.data.file = "~/Dropbox/Genome_PlayGround/ORFs_report/Scaffold151535_ORFs.csv",
-          user.sep = " ",
-          out.file = "~/Desktop/TEST.pdf")
-
-img_path <- "~/Desktop/TEST.pdf"
-include_graphics(path = img_path, dpi = 300)
-
 ```
