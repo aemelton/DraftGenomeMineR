@@ -42,7 +42,6 @@ ORF.df <- data.frame(Category = ORF$Category, start = ORF$start, width = ORF$wid
 #
 big.df <- NULL
 big.df <- rbind(Not.ORF.df, ORF.df)
-#big.df
 #
 
 #

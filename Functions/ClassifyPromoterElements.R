@@ -78,6 +78,8 @@ growth <- c("sugar", "elongation", "cell")
 other_stress <- c("xenobiotic", "wound", "hypoxic", "oxygen", "anaerobic", "salt")
 #
 
+# Categories and keywords can be changed to fit your needs. You may need to adjust some
+# of the row and column numbers later on.
 # Filter out RDEs that don't filter into a listed category
 df <- data.frame(RDE.ID = character(469),
                  light = character(469),
@@ -109,12 +111,11 @@ ff = function(x, patterns, replacements = patterns, fill = 0, ...)
   return(ans)
 }
 #
-### LOOPS!
-###############################################################################
+
 #
 for(j in 1:nrow(cat)){
   #
-  #
+
   for(i in 1:length(plant_parts)){
     df$plant_parts <- ff(x = cat$Categories, patterns = plant_parts)
   }

@@ -45,7 +45,7 @@ DoBlastSearch <- function(query.file.path,
   #
   
   # Filter out hits to just have unique scaffolds to extract from draft genome
-  cl.filt <- subset(x = cl, E <= min.e)
+  cl.filt <- subset(x = cl, E <= min.e, Bits>=min.bit)
   cl.filt
   cl.filt.unique <- cl.filt[!duplicated(cl.filt[,c('QueryID')]),]
   cl.filt.unique

@@ -38,7 +38,6 @@ for(i in 1:length(csv.files)){
                   by = "RDE")    #rbind(df, csv)
 }
 
-df ## #WOOOOOOO IT WORKED
 df <- df[-2] # It makes an empty scaffoldID column. KICK IT OUT.
 df[is.na(df)] <- 0
 write.csv(x = df, file = Output.Filename, row.names = F)

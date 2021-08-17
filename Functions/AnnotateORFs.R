@@ -10,18 +10,10 @@ orf.files <- list.files()
 #setwd("AA_BlastDB/")
 file.copy(orf.files, AA.BlastDB.folder)
 ### All of this will need to be in a loop to loop over each scaffold, generate a db for each, and annotate the ORFs
-#genes.seq <- readLines(con = "Scaffold18599_ORFs.fa")
 setwd(AA.BlastDB.folder)
 for(i in 1:length(orf.files)){
   makeblastdb(file = orf.files[i], dbtype = BlastDB.type)
 }
-
-
-# Annotate ORFs of interest and write them to their own fasta
-#annotated.genes.file <- "~/Dropbox/Genome_PlayGround/FASTAs/PIP1_3.fa"
-#AA.FASTA.out.folder <- "~/Dropbox/Genome_PlayGround/AA_FASTA/"
-#BlastDB.type <- "prot"
-#blast.type <- "blastp"
 
 setwd(AA.ORF.folder)
 orf.files <- list.files()
@@ -51,19 +43,5 @@ for(i in 1:nrow(cl)){
   filename <- paste0(header, "_", as.character(cl$SubjectID[i]), ".fasta")
   x <- dplyr::tibble(name = header, seq = seq)
   writeFasta(data = x, filename = filename)
-}
-#for(q in 1:nrow(cl)){
-#  setwd(AA.FASTA.out.folder)
-#  header <- as.character(cl$QueryID[q])
-#  seq <- genes.seq[c(grep(paste(">", cl$SubjectID[q], sep=''), genes.seq)+1)] 
-#  filename <- paste0(header, "_", as.character(cl$SubjectID[q]), ".fasta")
-#  
-#  x <- dplyr::data_frame(name = header, seq = seq)
-#  writeFasta(data = x, filename = filename)
-#  }
-#  }else{
-#    next
-#  }
-#}
-#
+  }
 }

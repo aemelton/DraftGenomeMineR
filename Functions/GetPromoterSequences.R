@@ -10,16 +10,6 @@ GetPromoterSequences <- function(orfs.report,
                                  promoters.folder,
                                  perc.ident.threshold){
   
-  
-  ### WOOWOOOWOOOWOOO LOOK HERE FOR EDITS FOR TESTING REMOVE THIS STUFF WOOWOOWOO
-  
-  #orfs.report = "ORFs_report/Scaffold128070_ORFs.csv"
-  #blast.out = "AA_BlastDB/Scaffold128070_ORFs.fa_BlastOut.csv"
-  #scaffold.fasta = "Output_FASTAs/Scaffold128070.fasta"
-  #promoter.csv.file.out = "PROMOTER_OUT_TEST.csv"
-  #promoter.sequence.fasta = "PROMOTER_OUT_TEST.fa"
-
-
 ### Get just the orfs that match the gene  
 orf.blast.out <- read.csv(blast.out)
 orf.blast.out.filt <- filter(orf.blast.out, orf.blast.out$Perc.Ident >= perc.ident.threshold)
@@ -66,11 +56,6 @@ for(i in 1:nrow(Promoters)){
   }
 }
 #
-#
-
-#
-#Promoters$Start
-#
 
 #
 write.csv(Promoters, promoter.csv.file.out, row.names = F, quote = F)
@@ -78,7 +63,6 @@ write.csv(Promoters, promoter.csv.file.out, row.names = F, quote = F)
 
 #
 csv <- Promoters
-#csv
 seqType <- "DNA"
 FASTA <- NULL
 for(i in 1:nrow(csv)){
@@ -90,7 +74,6 @@ for(i in 1:nrow(csv)){
 #
 
 #
-#FASTA
 write.table(FASTA, file = promoter.sequence.fasta, col.names = F, row.names = F, quote = F)
 #
 
